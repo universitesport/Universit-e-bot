@@ -8,6 +8,13 @@ import random  #importation du random
 import os #pour les cogs
 from discord.ext import commands #importation des fonctions pour discord bot
 
+try:  
+    os.environ['DISCORDBOTTOKEN']
+    discordbottoken = os.getenv('DISCORDBOTTOKEN')
+except KeyError: 
+    print ("ERROR, Please pass the Discord Bot Token in the system environment variables")
+    sys.exit(1)
+
 universitebot = commands.Bot(command_prefix = '$') #prefixe à utiliser pour intéragir avec le bot
 
 @universitebot.event #Déclarer à chaque fois que l'on veut une action du bot
@@ -30,4 +37,4 @@ for filename in os.listdir('./cogs'):
     if filename.endswith('.py'):
         universitebot.load_extension(f'cogs.{filename[:-3]}')
 
-universitebot.run('Token')
+universitebot.run(discordbottoken)
