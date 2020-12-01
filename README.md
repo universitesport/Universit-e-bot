@@ -1,4 +1,4 @@
-# Discord bot Universit'E-Sport project 
+# Universit'E-Bot project 
 Discord bot for Universit'E-Sport organisation. 
 
 ## Copyright 
