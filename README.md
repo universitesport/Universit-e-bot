@@ -15,6 +15,6 @@ It'll help Universit'E-Sport organisation for their tournament.
 Some easter eggs can be hidden. 
 
 ## Credits 
-Author : CUNY Félicien 
-Date : 01/12/2020 
-Last Update : 01/12/2020
+- Author : CUNY Félicien 
+- Date : 01/12/2020 
+- Last Update : 01/12/2020
