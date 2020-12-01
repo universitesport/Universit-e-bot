@@ -5,6 +5,7 @@
 
 import discord #importation des modules discord
 import random  #importation du random
+import os #pour les cogs
 from discord.ext import commands #importation des fonctions pour discord bot
 
 universitebot = commands.Bot(command_prefix = '$') #prefixe à utiliser pour intéragir avec le bot
@@ -18,8 +19,15 @@ async def ping(ctx): #ping = nom de la commande; exemple $ping pourra être util
     await ctx.send("Pong !")
 
 @universitebot.command()
-async def sardoche(ctx): #$sardoche envoie random une citation de sardoche
-    reponses = ["Mais c'était sur en faite !",
-                 "Il est mort, le noir est mort",
-                 "POURQUOI ? POURQUOI ? POURQUOI ?"]
-    await ctx.send(f'{random.choice(reponses)}') #envoie la réponse 
+async def load(ctx, extension):
+    client.load_extension(f'cogs.{extension}')
+
+@universitebot.command()
+async def unload(ctx, extension):
+    client.unload_extension(f'cogs.{extension}')
+
+for filename in os.listdir('./cogs'):
+    if filename.endswith('.py'):
+        universitebot.load_extension(f'cogs.{filename[:-3]}')
+
+universitebot.run('Token')
