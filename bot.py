@@ -1,40 +1,58 @@
-#Author : CUNY Félicien
-#Language : FR - French
-#Date : 01/12/2020
-#Copyright : This code can be use for every member working on 'Universit'E-Bot' discord bot only. If you want to work on it, please contact me : felicien.cuny@outlook.fr
+import argparse
+import logging
+import os
+import platform
+import sys
+from configparser import ConfigParser
+from pathlib import Path
 
-import discord #importation des modules discord
-import random  #importation du random
-import os #pour les cogs
-from discord.ext import commands #importation des fonctions pour discord bot
+from aiohttp.client_exceptions import ClientConnectorError
 
-try:  
-    os.environ['DISCORDBOTTOKEN']
-    discordbottoken = os.getenv('DISCORDBOTTOKEN')
-except KeyError: 
-    print ("ERROR, Please pass the Discord Bot Token in the system environment variables")
-    sys.exit(1)
+from core import logger, client, help
 
-universitebot = commands.Bot(command_prefix = '$') #prefixe à utiliser pour intéragir avec le bot
+if __name__ == "__main__":
 
-@universitebot.event #Déclarer à chaque fois que l'on veut une action du bot
-async def on_ready(): #lancement du bot en ligne
-    print('Le bot est pret') #indique que le bot est lancé.
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d", "--debug", help="enable debug mode for the bot", action="store_true")
+    parser.add_argument("-v", "--verbose", help="set all external logger to debug level instead of warning", action="store_true")
+    parser.add_argument("-lf", "--logfile", help="output the logging information into \".log\" file instead of sys.stdout", action="store_true")
 
-@universitebot.command() #Déclarer à chaque fois que l'on veut utiliser le bot
-async def ping(ctx): #ping = nom de la commande; exemple $ping pourra être utiliser sur discord pour trigger le bot
-    await ctx.send("Pong !")
+    args = parser.parse_args()
 
-@universitebot.command()
-async def load(ctx, extension):
-    client.load_extension(f'cogs.{extension}')
+    if args.logfile:
+        Path("./log").mkdir(parents=True, exist_ok=True)
+        handler = logger.DailyRotatingFileHandler(basedir="./log")
+    else:
+        handler = logging.StreamHandler(sys.stdout)
+        
+    logging.basicConfig(format="[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s",
+                        datefmt="%Y-%m-%d %H:%M:%S",
+                        handlers=[handler])
 
-@universitebot.command()
-async def unload(ctx, extension):
-    client.unload_extension(f'cogs.{extension}')
+    if args.verbose:
+        external_level = logging.DEBUG
+    else:
+        external_level = logging.WARNING
 
-for filename in os.listdir('./cogs'):
-    if filename.endswith('.py'):
-        universitebot.load_extension(f'cogs.{filename[:-3]}')
+    if args.debug:
+        local_level = logging.DEBUG
+    else:
+        local_level = logging.INFO
 
-universitebot.run(discordbottoken)
+    logging.getLogger("").setLevel(external_level)
+    logging.getLogger("Azerty").setLevel(local_level)
+    log = logging.getLogger("Azerty")
+
+    cfg = ConfigParser()
+    if not cfg.read("bot.ini"):
+        log.error("configuration file corrupted or missing")
+        sys.exit(1)
+
+    bot = client.Bot(helpcommand=help.Help(), args=args, logger=log)
+    bot.load_extension("core.commands")
+
+    try:
+        bot.run(cfg["config"]["token"])
+    except ClientConnectorError:
+        log.error("unable to connect to discord")
+        sys.exit(1)
